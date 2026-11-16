@@ -1,0 +1,29 @@
+# Secrets and local settings
+config.yaml
+*.env
+.env
+*_token*.txt
+youtube_api_key.txt
+cookies.json
+tiktok_cookies.json
+session-*
+local_data_path.txt
+social_universe*.csv
+
+# Runtime data
+*.db
+*.db-wal
+*.db-shm
+*.partial
+content/
+backups/
+exports/
+staging/
+audit_reports/
+instagram_qualification_v65.json
+.social_collector.lock
+social_collector_*.json
+.scrape_job_*.json
+.tiktok_job_*.json
+__pycache__/
+.DS_Store
