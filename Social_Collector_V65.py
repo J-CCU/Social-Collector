@@ -26503,6 +26503,16 @@ def _v46_migrate_local_data(target: Optional[str] = None) -> int:
     if migrated == 0:
         print(f"[migrate/v46] no databases found under {source_root}", flush=True)
         return 2
+    # V65 Instagram qualification registry lives beside the databases; without it
+    # the next launch rebuilds the registry and re-approves on-hold handles.
+    for name in ("instagram_qualification_v65.json",):
+        src, dest = source_root / name, dest_root / name
+        if not src.exists():
+            continue
+        if dest.exists() and dest.stat().st_size > 0:
+            raise RuntimeError(f"destination already exists; refusing to overwrite: {dest}")
+        shutil.copy2(src, dest)
+        print(f"[migrate/v46] copied {src.name} -> {dest}", flush=True)
     # Pointer flips only after every copied database passed quick_check/count verification.
     V46_DATA_POINTER_FILE.write_text(str(dest_root), encoding="utf-8")
     print(f"[migrate/v46] COMPLETE | active data root on next launch: {dest_root}", flush=True)
@@ -32573,7 +32583,9 @@ def _v59_test_proxy_worker(self, cfg: dict, username: str) -> None:
         proxies = _v59_proxy_mapping(cfg)
         if not proxies:
             raise RuntimeError("Enable the proxy and enter host/port first")
-        u = instagram_normalized_username(username) or "cashcardsunlimited"
+        u = instagram_normalized_username(username)
+        if not u:
+            raise RuntimeError("Enter an Instagram handle in the Instagram box first")
         url = f"{instagram_INSTAGRAM}/api/v1/feed/user/{u.lower()}/username/"
         r = requests.get(
             url,
@@ -32623,8 +32635,11 @@ def _v59_test_proxy_from_gui(self) -> None:
         self.v59_proxy_status_var.set(f"Proxy configuration error: {exc}")
         return
     raw = self.text_boxes.get("instagram").get("1.0", tk.END) if self.text_boxes.get("instagram") else ""
-    first = next((line.strip() for line in raw.splitlines() if line.strip()), "@cashcardsunlimited")
-    username = _v57_ig_username(first) or "cashcardsunlimited"
+    first = next((line.strip() for line in raw.splitlines() if line.strip()), "")
+    username = _v57_ig_username(first) if first else ""
+    if not username:
+        self.v59_proxy_status_var.set("Enter an Instagram handle in the Instagram box to test the proxy")
+        return
     self.v59_proxy_status_var.set(f"Testing {_v59_proxy_display(cfg)} against Instagram @{username}…")
     threading.Thread(target=_v59_test_proxy_worker, args=(self, cfg, username), daemon=True).start()
 
@@ -32819,7 +32834,7 @@ def _v59_instagram_access_regression_test() -> None:
             # New public route must clear the obsolete shared 401 clock without
             # touching a Graph-auth marker.
             db.set_runtime_state("instagram_access_backoff_until", str(time.time()+999))
-            db.set_runtime_state("instagram_access_backoff_username", "cashcardsunlimited")
+            db.set_runtime_state("instagram_access_backoff_username", "example_handle")
             db.set_runtime_state("instagram_access_backoff_reason", "HTTP 401 public test")
             _v59_clear_legacy_public_backoff(db)
             assert not str(db.get_runtime_state("instagram_access_backoff_until") or "")
@@ -33222,7 +33237,8 @@ def production_self_test() -> None:
 #
 # config.yaml is re-read during Instagram Graph work, so replacing a rotating
 # access token there does not require editing this source file. Secrets are
-# never printed. The collector never writes config.yaml.
+# never printed. V61 itself never writes config.yaml; the V62 credential panel
+# (Save Instagram token / Save YouTube key) does write it.
 V61_BUILD = "SOCIAL_COLLECTOR_PRODUCTION_2026_10_INSTAGRAM_CONFIG_FIRST"
 PRODUCTION_BUILD = V61_BUILD
 SOCIAL_COLLECTOR_BUILD = V61_BUILD

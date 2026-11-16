@@ -163,7 +163,7 @@ Main GUI controls:
 | Open Data Folder | | Open the data root in the file manager |
 | Run Self-Test | | Run the built-in regression self-test |
 | API Credentials | | Paste a new Instagram access token or YouTube Data API key. **Save Instagram token** / **Save YouTube key** write it to `config.yaml`; **Reload config** re-reads the file; **Show** reveals the typed value. |
-| Advanced proxy… | hidden | Shows the optional single static proxy panel for Instagram public fallback. The password is kept in memory for the session only and never written to disk. **Test Instagram Connection** in this panel fetches the first Instagram handle in the input box through the proxy. |
+| Advanced proxy… | hidden | Shows the optional single static proxy panel for Instagram public fallback. The password is kept in memory for the session only and never written to disk. **Test Instagram Connection** in this panel fetches the first Instagram handle in the input box through the proxy. If the box is empty it asks you to enter a handle. |
 | Platform Status | | Per-platform state (running/cooldown) and completion counts; **Show database/details** adds stored row counts |
 
 ## Command-line options
@@ -175,7 +175,7 @@ The script has no argparse interface. It recognizes these flags (pass one at a t
 | *(none)* | Launch the GUI |
 | `--print-universe` | Print the enabled entries from `social_universe.csv` as JSON |
 | `--backup-now` | Make a verified backup of all three databases now |
-| `--migrate-local-data [TARGET]` | Copy the three databases to `TARGET` (default `~/SocialCollector/data`, or `%SystemDrive%\SocialCollector\data` on Windows), verify them, then write `local_data_path.txt`. Originals are not deleted. Refuses to overwrite a non-empty destination database. Only the `.db` files are copied: move `instagram_qualification_v65.json` yourself, or the registry is rebuilt from `social_universe.csv` on next launch. |
+| `--migrate-local-data [TARGET]` | Copy the three databases to `TARGET` (default `~/SocialCollector/data`, or `%SystemDrive%\SocialCollector\data` on Windows), verify them, then write `local_data_path.txt`. Originals are not deleted. Also copies `instagram_qualification_v65.json` if present, so approvals and on-hold handles carry over. Refuses to overwrite a non-empty destination database or registry file. |
 | `--v65-audit` | Write a conservative eligibility/coverage audit CSV per database to `<data root>/audit_reports/` |
 | `--v65-instagram-status` | Print the Instagram qualification registry summary as JSON |
 | `--v65-approve-instagram @handle` | Approve a new Instagram handle for collection |
