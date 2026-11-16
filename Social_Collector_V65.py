@@ -26636,7 +26636,19 @@ def unified_main() -> None:
     is_test = any(arg.endswith("self-test") or arg == "--self-test" for arg in sys.argv[1:])
     if is_worker or is_test:
         return _v46_unified_main_prev()
-    _v46_acquire_parent_lock()
+    try:
+        _v46_acquire_parent_lock()
+    except RuntimeError as exc:
+        message = f"{exc}.\nClose the other Social Collector window first, then try again."
+        print(f"Social Collector: {exc}. Close the other Social Collector window first.", file=sys.stderr, flush=True)
+        try:
+            _lock_root = tk.Tk()
+            _lock_root.withdraw()
+            messagebox.showerror("Social Collector is already running", message, parent=_lock_root)
+            _lock_root.destroy()
+        except Exception:
+            pass
+        raise SystemExit(1)
     try:
         return _v46_unified_main_prev()
     finally:
@@ -31002,9 +31014,13 @@ UnifiedApp.__init__ = _v56_app_init
 def _v56_instagram_regression_test() -> None:
     global instagram_COLLECT_COMMENTS
     old_comments = instagram_COLLECT_COMMENTS
+    old_universe = globals().get("PRODUCTION_UNIVERSE_FILE")
     instagram_COLLECT_COMMENTS = True
     try:
         with tempfile.TemporaryDirectory(prefix="v56_instagram_core_") as td:
+            # Isolate the test from the user's real social_universe.csv so the
+            # expected Instagram universe is only what this test creates.
+            globals()["PRODUCTION_UNIVERSE_FILE"] = Path(td) / "missing_universe.csv"
             path = Path(td) / "instagram.db"
             db = instagram_Database(path)
             try:
@@ -31056,6 +31072,7 @@ def _v56_instagram_regression_test() -> None:
                 db.close()
     finally:
         instagram_COLLECT_COMMENTS = old_comments
+        globals()["PRODUCTION_UNIVERSE_FILE"] = old_universe
 
 
 def v56_self_test() -> None:

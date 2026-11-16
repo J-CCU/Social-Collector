@@ -144,7 +144,7 @@ py Social_Collector_V65.py
 
 On startup the GUI:
 
-1. Takes an exclusive lock (`.social_collector.lock` in the data root). A second GUI instance pointed at the same data root refuses to start.
+1. Takes an exclusive lock (`.social_collector.lock` in the data root). A second GUI instance pointed at the same data root shows an "already running" message (or prints one line to stderr when no window can open) and exits with code 1.
 2. Loads `social_universe.csv` into the per-platform input boxes.
 3. Runs a non-blocking startup audit of database completeness.
 
@@ -180,7 +180,7 @@ The script has no argparse interface. It recognizes these flags (pass one at a t
 | `--v65-instagram-status` | Print the Instagram qualification registry summary as JSON |
 | `--v65-approve-instagram @handle` | Approve a new Instagram handle for collection |
 | `--v65-classify-instagram @handle STATUS "evidence"` | Set a handle's qualification status (see below) |
-| `--production-self-test` | Run the consolidated production self-test |
+| `--production-self-test` | Run the consolidated production self-test. Self-tests use temporary databases, so the result does not depend on your `social_universe.csv` |
 | `--vNN-self-test` | Run a version-specific regression test (for example `--v65-self-test`, `--v65-qualification-self-test`, `--v64-self-test`, `--v60-self-test`, and older ones) |
 
 Internal flags, used by the GUI and not for manual use: `--platform-worker <platform> <job.json>` and `--worker <job.json>`. `--neon-sync-worker` is disabled in this build.
